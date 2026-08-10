@@ -1,33 +1,56 @@
-# Perovskite Stability Curve Dataset
+# Perovskite MPPT Curve Visualization Dataset
 
-A paired numerical and visual dataset of perovskite solar-cell stability curves for visual learning research. The repository contains processed maximum power point tracking (MPPT) measurements, multiple image renderings of normalized power conversion efficiency (PCE) curves, multi-device comparison figures, and the Python scripts used to create them.
+A dataset-generation project that converts experimental perovskite solar-cell measurements into four types of curve figures for visual learning. The repository contains processed maximum power point tracking (MPPT) data, the Python scripts used to render the curves, and the resulting image dataset.
 
 <p align="center">
   <img src="figure/multi/A705P12_P101P04.png" alt="Example comparison of two perovskite stability datasets" width="820">
 </p>
 
-## Project Purpose
+## Project Objective
 
-This project was created to support visual learning from perovskite stability curves. It preserves the numerical measurements alongside different visual representations of the same degradation behavior, allowing researchers to explore tasks such as curve-pattern recognition, visual representation learning, figure understanding, and stability-trend comparison.
+The objective is to transform experimental stability measurements into visually diverse scientific curve images. The numerical MPPT data are preprocessed into elapsed time and normalized power conversion efficiency (PCE), then rendered with different visual elements such as colors, markers, grids, fitted lines, backgrounds, and multi-curve overlays.
+
+The generated figures can be used as image data for visual learning, scientific figure understanding, curve-pattern recognition, and experiments on visual robustness across plotting styles.
+
+## Data-to-Figure Workflow
+
+```text
+Experimental perovskite MPPT data
+                │
+                ▼
+  Elapsed-time calculation and Pmax normalization
+                │
+                ▼
+         Processed curve CSV files
+                │
+                ├── assistline
+                ├── assistline_overlap
+                ├── colour
+                └── multi
+                         │
+                         ▼
+              Visual-learning image dataset
+```
 
 The current release includes:
 
 - 30 processed perovskite device datasets.
 - 73,242 normalized time-series points.
-- 90 single-device figures in three visual styles.
-- 12 multi-device comparison figures.
+- 90 single-device figures across three categories.
+- 12 multi-device figures in the fourth category.
 - 102 high-resolution PNG figures in total.
 - Scripts for preprocessing measurements and regenerating the visualizations.
 
-This repository is a dataset collection rather than a finalized machine-learning benchmark. It does not currently provide class annotations, predefined tasks, or official training, validation, and test splits.
+## Four Figure Categories
 
-## Dataset Design
+| Category | Files | Visual style |
+| --- | ---: | --- |
+| `figure/assistline/` | 30 | Single-device curves with sampled markers, a reference grid, and a linear-fit auxiliary line |
+| `figure/assistline_overlap/` | 30 | Blue single-device curves with gray dashed reference lines and an overlapping orange fitted trend line |
+| `figure/colour/` | 30 | Tan single-device curves with mixed solid/hollow markers and a brown-to-white gradient background |
+| `figure/multi/` | 12 | Two- or three-device curves overlaid in contrasting colors for direct stability comparison |
 
-- Each single-device CSV is paired with visualizations derived from the same MPPT stability curve.
-- Multiple rendering styles introduce controlled visual variation, including different colors, markers, grids, backgrounds, and fitted trend lines.
-- Multi-device figures combine two or three curves to represent comparative stability patterns.
-- Elapsed time is represented in hours, and measured maximum power (`Pmax`) is normalized to the range 0–1.
-- Device identifiers and legend values preserve the link between numerical records and generated figures.
+The first three categories provide different visual renderings of individual experimental curves. The `multi` category combines selected devices in a single figure. Together, the four categories introduce controlled visual variation while preserving the underlying perovskite stability behavior.
 
 ## Repository Structure
 
@@ -67,16 +90,15 @@ Each processed CSV contains the following columns:
 
 The included collection contains 73,242 time-series points across 30 device files. Measurement durations range from approximately 233 to 624 hours. A device identifier in `data_csv/` can be matched to figures with the same identifier under the single-device figure directories.
 
-## Potential Research Uses
+## Intended Use
 
-- Visual representation learning from scientific curves.
-- Recognition or retrieval of perovskite degradation patterns.
-- Numerical-to-visual and visual-to-numerical alignment studies.
-- Scientific figure understanding and curve interpretation.
-- Comparison of visual styles and their effect on model behavior.
-- Prototyping future stability classification or regression tasks after adding suitable labels.
+- Visual learning from perovskite stability-curve images.
+- Scientific plot and curve-pattern recognition.
+- Visual representation learning across different plotting styles.
+- Evaluation of model robustness to colors, grids, markers, fitted lines, and backgrounds.
+- Understanding and comparison of single-device and multi-device stability curves.
 
-Researchers should define task-specific labels and use device-level data splitting to prevent different renderings of the same device from leaking across training and evaluation sets.
+This repository provides the generated data and plotting workflow, but it does not define a specific learning model or official training, validation, and test split. When creating such splits, group images by device ID so that different renderings of the same experimental curve do not leak across training and evaluation sets.
 
 ## Requirements
 
@@ -157,11 +179,13 @@ python code/assistline_overlap.py
 python code/colour.py
 ```
 
-## Example Outputs
+## Examples of the Four Figure Categories
 
-| Gradient style | Trend and reference-grid style |
+| `assistline` | `assistline_overlap` |
 | --- | --- |
-| <img src="figure/colour/A705P12_MPPT001.png" alt="Gradient-style single-device plot" width="440"> | <img src="figure/assistline_overlap/A705P12_MPPT001.png" alt="Single-device plot with trend and reference lines" width="440"> |
+| <img src="figure/assistline/A705P12_MPPT001_Control_PCE.png" alt="Single-device curve with an auxiliary fit line" width="440"> | <img src="figure/assistline_overlap/A705P12_MPPT001.png" alt="Single-device curve with overlapping fit and reference lines" width="440"> |
+| `colour` | `multi` |
+| <img src="figure/colour/A705P12_MPPT001.png" alt="Gradient-style single-device curve" width="440"> | <img src="figure/multi/A705P12_P101P04.png" alt="Multi-device comparison curve" width="440"> |
 
 ## Reproducibility and Dataset Notes
 
@@ -170,8 +194,8 @@ python code/colour.py
 - The plotting scripts sort samples by elapsed time and pair `Value_x` and `Value_y` entries up to their shared length.
 - The preprocessor uses min–max normalization: `(Pmax - min(Pmax)) / (max(Pmax) - min(Pmax))`.
 - Generated images are high resolution and may require additional memory when processing many devices.
-- Multiple figures may originate from the same underlying device curve. Treat them as related samples when designing machine-learning splits.
-- The dataset is intended for research and visualization experiments; model performance should not be interpreted as a clinical, industrial, or lifetime-certification result.
+- Multiple figure styles may originate from the same underlying experimental curve. Treat them as related samples when designing machine-learning splits.
+- The generated figures are intended for visual-learning and scientific-visualization research; they are not device-lifetime certification results.
 
 ## License and Data Use
 
