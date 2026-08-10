@@ -123,7 +123,7 @@ On Windows, activate the environment with `.venv\Scripts\activate`.
 The scripts currently contain a `BASE_DIR` constant inherited from the original local workflow. Before running a script, change this value to the absolute path of your cloned repository:
 
 ```python
-BASE_DIR = "/absolute/path/to/photovoltaic-mppt-stability-plots"
+BASE_DIR = "/absolute/path/to/perovskite-mppt-curve-visualization-dataset"
 ```
 
 The two comparison scripts read the included flat files from `data_csv/` and write new images to `multi_csv/`.
