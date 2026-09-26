@@ -1,16 +1,25 @@
 # Perovskite MPPT Curve Visualization Dataset
 
-A dataset-generation project that converts experimental perovskite solar-cell measurements into four types of curve figures for visual learning. The repository contains processed maximum power point tracking (MPPT) data, the Python scripts used to render the curves, and the resulting image dataset.
+[English](README.md) | [简体中文](README_CN.md)
+
+This dataset supports **visual learning for complex scientific curve figures**. It uses experimental perovskite solar-cell maximum power point tracking (MPPT) measurements to generate plots that reproduce four common difficulties in reading curves from research papers: auxiliary lines, overlap between the target curve and auxiliary lines, distracting background colors, and overlap among multiple curves. **Perovskite degradation/stability curves are the target application**; the broader figure-reading problems also occur across scientific literature. The long-term goal is to support training a dedicated multimodal large language model (vision-language model) to recognize and interpret these curves.
+
+The repository contains processed MPPT data, plotting scripts, and generated images. The figures are rendered from the included measurements; they are not screenshots extracted from published papers.
 
 <p align="center">
   <img src="figure/multi/A705P12_P101P04.png" alt="Example comparison of two perovskite stability datasets" width="820">
 </p>
 
-## Project Objective
+## Research Objective
 
-The objective is to transform experimental stability measurements into visually diverse scientific curve images. The numerical MPPT data are preprocessed into elapsed time and normalized power conversion efficiency (PCE), then rendered with different visual elements such as colors, markers, grids, fitted lines, backgrounds, and multi-curve overlays.
+The central task is to identify the **target degradation curve** despite visual elements that can obscure its path or make it easy to confuse with another line. The dataset focuses on four recurring challenges in scientific figures:
 
-The generated figures can be used as image data for visual learning, scientific figure understanding, curve-pattern recognition, and experiments on visual robustness across plotting styles.
+1. **Auxiliary lines are present:** grids, reference lines, or fitted trends appear near the target curve.
+2. **The target and auxiliary lines overlap:** their crossings or shared segments make line identity ambiguous.
+3. **The background varies in color:** gradients or colored regions reduce the reliability of simple color-based recognition.
+4. **Multiple curves share one figure:** two or three series may cross or partially overlap, requiring the model to keep each curve distinct.
+
+These challenges are represented through controlled renderings of perovskite MPPT time series. The intended learning path is to distinguish the target curve from non-target elements, follow it through difficult regions, and interpret degradation behavior. Model training and evaluation remain future work.
 
 ## Data-to-Figure Workflow
 
@@ -41,16 +50,16 @@ The current release includes:
 - 102 high-resolution PNG figures in total.
 - Scripts for preprocessing measurements and regenerating the visualizations.
 
-## Four Figure Categories
+## Four Figure Categories and Recognition Challenges
 
-| Category | Files | Visual style |
-| --- | ---: | --- |
-| `figure/assistline/` | 30 | Single-device curves with sampled markers, a reference grid, and a linear-fit auxiliary line |
-| `figure/assistline_overlap/` | 30 | Blue single-device curves with gray dashed reference lines and an overlapping orange fitted trend line |
-| `figure/colour/` | 30 | Tan single-device curves with mixed solid/hollow markers and a brown-to-white gradient background |
-| `figure/multi/` | 12 | Two- or three-device curves overlaid in contrasting colors for direct stability comparison |
+| Category | Figures | Recognition challenge | Rendering |
+| --- | ---: | --- | --- |
+| `figure/assistline/` | 30 | Identify the target curve when auxiliary elements are present | Single-device curve with markers, a reference grid, and a linear-fit line |
+| `figure/assistline_overlap/` | 30 | Trace the target curve where it overlaps or crosses auxiliary lines | Single-device curve with dashed references and an overlapping fitted trend |
+| `figure/colour/` | 30 | Recognize the curve despite a non-uniform colored background | Single-device curve with mixed markers and a brown-to-white gradient |
+| `figure/multi/` | 12 | Keep multiple curves distinct through crossings and partial overlap | Two or three device curves shown in one plot |
 
-The first three categories provide different visual renderings of individual experimental curves. The `multi` category combines selected devices in a single figure. Together, the four categories introduce controlled visual variation while preserving the underlying perovskite stability behavior.
+The first three categories render individual experimental series. The `multi` category combines selected devices. The four categories isolate common visual ambiguities while retaining the underlying MPPT behavior.
 
 ## Repository Structure
 
@@ -69,7 +78,8 @@ The first three categories provide different visual renderings of individual exp
 │   ├── assistline_overlap/     # Single-device figures with grid/trend overlays
 │   ├── colour/                 # Single-device color-style figures
 │   └── multi/                  # Multi-device comparison figures
-└── README.md
+├── README.md                  # English
+└── README_CN.md               # 简体中文
 ```
 
 ## Data Format
@@ -82,7 +92,7 @@ Each processed CSV contains the following columns:
 | `Figure` | Figure index |
 | `Sub-figure` | Subfigure label |
 | `Value_x` | Newline-separated elapsed-time values in hours |
-| `Value_y` | Newline-separated normalized PCE values |
+| `Value_y` | Newline-separated normalized `Pmax` values used as the plotted stability signal |
 | `Legend` | Device-structure or dataset label |
 | `X-label` | Label for the x-axis |
 | `Y-label` | Label for the y-axis |
@@ -90,15 +100,14 @@ Each processed CSV contains the following columns:
 
 The included collection contains 73,242 time-series points across 30 device files. Measurement durations range from approximately 233 to 624 hours. A device identifier in `data_csv/` can be matched to figures with the same identifier under the single-device figure directories.
 
-## Intended Use
+## Intended Use and Current Scope
 
-- Visual learning from perovskite stability-curve images.
-- Scientific plot and curve-pattern recognition.
-- Visual representation learning across different plotting styles.
-- Evaluation of model robustness to colors, grids, markers, fitted lines, and backgrounds.
-- Understanding and comparison of single-device and multi-device stability curves.
+- Develop visual-learning tasks that locate and follow the target curve in complex scientific figures.
+- Study recognition under auxiliary lines, line overlap, background color variation, and multi-curve overlap.
+- Support future training and evaluation of a perovskite degradation-curve-focused multimodal LLM / vision-language model.
+- Compare degradation patterns among single-device and multi-device MPPT plots.
 
-This repository provides the generated data and plotting workflow, but it does not define a specific learning model or official training, validation, and test split. When creating such splits, group images by device ID so that different renderings of the same experimental curve do not leak across training and evaluation sets.
+This repository provides generated figures, processed measurements, and plotting scripts. It does **not** yet include a trained model, task-specific annotations, or an official training/validation/test split. Additional labels or instruction data may be needed for supervised model training. When creating splits, group images by device ID so that different renderings of the same experimental curve do not leak across training and evaluation sets.
 
 ## Requirements
 
@@ -195,7 +204,7 @@ python code/colour.py
 - The preprocessor uses min–max normalization: `(Pmax - min(Pmax)) / (max(Pmax) - min(Pmax))`.
 - Generated images are high resolution and may require additional memory when processing many devices.
 - Multiple figure styles may originate from the same underlying experimental curve. Treat them as related samples when designing machine-learning splits.
-- The generated figures are intended for visual-learning and scientific-visualization research; they are not device-lifetime certification results.
+- The generated figures are intended for visual-learning and scientific-visualization research; they are not device-lifetime certification results or figures extracted from papers.
 
 ## License and Data Use
 
