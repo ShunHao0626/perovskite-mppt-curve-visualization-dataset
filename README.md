@@ -19,7 +19,9 @@ The central task is to identify the **target degradation curve** despite visual 
 3. **The background varies in color:** gradients or colored regions reduce the reliability of simple color-based recognition.
 4. **Multiple curves share one figure:** two or three series may cross or partially overlap, requiring the model to keep each curve distinct.
 
-These challenges are represented through controlled renderings of perovskite MPPT time series. The intended learning path is to distinguish the target curve from non-target elements, follow it through difficult regions, and interpret degradation behavior. Model training and evaluation remain future work.
+These challenges are represented through controlled renderings of perovskite MPPT time series. The intended learning path is to distinguish the target curve from non-target elements, follow it through difficult regions, and interpret the shape of the degradation curve. Model training and evaluation remain future work.
+
+> **Important: the plotted values preserve curve shape, not degradation magnitude.** Each device's `Pmax` series is min–max scaled to the range 0–1, so every curve reaches 0 at its own minimum and 1 at its own maximum. A device that retains 95 % of its initial power and one that loses 80 % can therefore look equally steep. The y-axis label `Normalized PCE` in the figures refers to this scaled value, not to PCE relative to its initial value. Use the figures for curve-shape and figure-reading tasks; do not read absolute retention, T80, or lifetime from them.
 
 ## Data-to-Figure Workflow
 
@@ -27,7 +29,7 @@ These challenges are represented through controlled renderings of perovskite MPP
 Experimental perovskite MPPT data
                 │
                 ▼
-  Elapsed-time calculation and Pmax normalization
+  Elapsed-time calculation and Pmax min–max scaling
                 │
                 ▼
          Processed curve CSV files
@@ -44,7 +46,7 @@ Experimental perovskite MPPT data
 The current release includes:
 
 - 30 processed perovskite device datasets.
-- 73,242 normalized time-series points.
+- 73,242 min–max scaled time-series points.
 - 90 single-device figures across three categories.
 - 12 multi-device figures in the fourth category.
 - 102 high-resolution PNG figures in total.
@@ -55,8 +57,8 @@ The current release includes:
 | Category | Figures | Recognition challenge | Rendering |
 | --- | ---: | --- | --- |
 | `figure/assistline/` | 30 | Identify the target curve when auxiliary elements are present | Single-device curve with markers, a reference grid, and a linear-fit line |
-| `figure/assistline_overlap/` | 30 | Trace the target curve where it overlaps or crosses auxiliary lines | Single-device curve with dashed references and an overlapping fitted trend |
-| `figure/colour/` | 30 | Recognize the curve despite a non-uniform colored background | Single-device curve with mixed markers and a brown-to-white gradient |
+| `figure/assistline_overlap/` | 30 | Trace the target curve where it overlaps or crosses auxiliary lines | Single-device curve with gray dashed reference lines at every axis tick and an overlapping dashed linear-fit trend |
+| `figure/colour/` | 30 | Recognize the curve despite a non-uniform colored background | Single-device curve with mixed filled and hollow markers over a brown-to-white gradient band covering the left part of the plot (up to 80 h or 22 % of the x-range, whichever is smaller) |
 | `figure/multi/` | 12 | Keep multiple curves distinct through crossings and partial overlap | Two or three device curves shown in one plot |
 
 The first three categories render individual experimental series. The `multi` category combines selected devices. The four categories isolate common visual ambiguities while retaining the underlying MPPT behavior.
@@ -67,9 +69,9 @@ The first three categories render individual experimental series. The `multi` ca
 .
 ├── code/
 │   ├── preprocess.py           # Converts raw perovskite MPPT exports to plotting metadata
-│   ├── assistline.py           # Single-device plot with a linear fit
-│   ├── assistline_overlap.py   # Single-device plot with grid and trend overlay
-│   ├── colour.py               # Single-device tan/gradient style
+│   ├── assistline.py           # Single-device plot with grid and a linear fit
+│   ├── assistline_overlap.py   # Single-device plot with dashed references and trend overlay
+│   ├── colour.py               # Single-device tan curve over a partial gradient band
 │   ├── multi-2.py              # Two-device comparison plots
 │   └── multi-3.py              # Two- and three-device comparison plots
 ├── data_csv/                   # 30 processed, flat CSV datasets
@@ -92,7 +94,7 @@ Each processed CSV contains the following columns:
 | `Figure` | Figure index |
 | `Sub-figure` | Subfigure label |
 | `Value_x` | Newline-separated elapsed-time values in hours |
-| `Value_y` | Newline-separated normalized `Pmax` values used as the plotted stability signal |
+| `Value_y` | Newline-separated `Pmax` values min–max scaled to 0–1 per device (shape only; see the note above) |
 | `Legend` | Device-structure or dataset label |
 | `X-label` | Label for the x-axis |
 | `Y-label` | Label for the y-axis |
@@ -105,7 +107,7 @@ The included collection contains 73,242 time-series points across 30 device file
 - Develop visual-learning tasks that locate and follow the target curve in complex scientific figures.
 - Study recognition under auxiliary lines, line overlap, background color variation, and multi-curve overlap.
 - Support future training and evaluation of a perovskite degradation-curve-focused multimodal LLM / vision-language model.
-- Compare degradation patterns among single-device and multi-device MPPT plots.
+- Compare degradation-curve shapes among single-device and multi-device MPPT plots (not degradation magnitude, because of the min–max scaling).
 
 This repository provides generated figures, processed measurements, and plotting scripts. It does **not** yet include a trained model, task-specific annotations, or an official training/validation/test split. Additional labels or instruction data may be needed for supervised model training. When creating splits, group images by device ID so that different renderings of the same experimental curve do not leak across training and evaluation sets.
 
@@ -135,17 +137,19 @@ The scripts currently contain a `BASE_DIR` constant inherited from the original 
 BASE_DIR = "/absolute/path/to/perovskite-mppt-curve-visualization-dataset"
 ```
 
-The two comparison scripts read the included flat files from `data_csv/` and write new images to `multi_csv/`.
+The scripts read from and write to the following locations relative to `BASE_DIR`:
 
-The single-device scripts use the following nested input layout:
+| Script | Reads | Writes |
+| --- | --- | --- |
+| `preprocess.py` | `原始数据/`, `器件结构.csv` | `<device-folder>/metadata_pv.csv` (directly under `BASE_DIR`) |
+| `assistline.py` | `data/<device>/metadata_pv.csv` | `pub_style/<device>.png` |
+| `assistline_overlap.py` | `data/<device>/metadata_pv.csv` | `assistline_overlap/<device>.png` |
+| `colour.py` | `data/<device>/metadata_pv.csv` | `pub_style_all/<device>.png` |
+| `multi-2.py`, `multi-3.py` | `data_csv/<device>.csv` | `multi_csv/<device1>_<device2>[_<device3>].png` |
 
-```text
-data/
-└── <device-name>/
-    └── metadata_pv.csv
-```
+Note that `preprocess.py` writes its output one level higher than the single-device scripts read it, so the device folders must be moved into `data/` (or the paths edited) before plotting. The output folders were renamed to the `figure/` subfolders when the repository was assembled.
 
-That nested source tree and the original instrument exports are not included in this repository. The corresponding pre-generated figures are available under `figure/`.
+The nested `data/` tree and the original instrument exports are not included. Each file in `data_csv/` has the same columns as a `metadata_pv.csv` file, so the single-device input layout can be recreated by copying `data_csv/<device>.csv` to `data/<device>/metadata_pv.csv`.
 
 ## Visualization Workflow
 
@@ -157,7 +161,7 @@ Edit the `PAIRS` list and, if necessary, `X_MAX_MAP` in `code/multi-2.py`, then 
 python code/multi-2.py
 ```
 
-Each tuple in `PAIRS` must use a filename from `data_csv/` without the `.csv` extension.
+Each tuple in `PAIRS` must use a filename from `data_csv/` without the `.csv` extension. The committed list produces 8 figures.
 
 ### Generate two- and three-device comparisons
 
@@ -167,7 +171,9 @@ Edit the `PAIRS` list in `code/multi-3.py`, then run:
 python code/multi-3.py
 ```
 
-This script supports both two-item and three-item tuples and uses red, blue, and green curves.
+This script supports both two-item and three-item tuples and uses red, blue, and green curves. The committed list produces 8 figures; its first five pairs are the same as in `multi-2.py` and write to the same filenames, so whichever script runs last determines those five images.
+
+Together the two committed `PAIRS` lists produce 11 distinct figures. `figure/multi/AY04P29_P101P04.png` is not produced by either list and must be added to `PAIRS` to be regenerated.
 
 ### Run the archived preprocessing workflow
 
@@ -176,17 +182,19 @@ This script supports both two-item and three-item tuples and uses red, blue, and
 - `原始数据/`: raw MPPT exports, either standard timestamp-column CSVs or supported instrument-specific CSVs.
 - `器件结构.csv`: a mapping from device IDs to legend labels.
 
-The script calculates elapsed time, applies min–max normalization to `Pmax`, and writes plotting metadata. Review its input/output paths before using it with new data.
+The script calculates elapsed time from the first timestamp, applies min–max scaling to `Pmax`, sets the y-label to `Normalized PCE`, and writes plotting metadata. Review its input/output paths before using it with new data.
 
 ### Generate single-device figures
 
-After preparing the nested `data/<device>/metadata_pv.csv` layout, update the relevant paths and run one of:
+After preparing the nested `data/<device>/metadata_pv.csv` layout, update `BASE_DIR` and run one of:
 
 ```bash
 python code/assistline.py
 python code/assistline_overlap.py
 python code/colour.py
 ```
+
+The committed files in `figure/assistline/` carry a `_Control_PCE` suffix (for example `A705P12_MPPT001_Control_PCE.png`) from an earlier version of `assistline.py`; the current script writes `<device>.png`.
 
 ## Examples of the Four Figure Categories
 
@@ -201,7 +209,7 @@ python code/colour.py
 - All plotting scripts use Matplotlib's `Agg` backend and can run without a graphical display.
 - Arial is requested for several styles; Matplotlib falls back to an available sans-serif font when Arial is unavailable.
 - The plotting scripts sort samples by elapsed time and pair `Value_x` and `Value_y` entries up to their shared length.
-- The preprocessor uses min–max normalization: `(Pmax - min(Pmax)) / (max(Pmax) - min(Pmax))`.
+- The preprocessor uses min–max scaling: `(Pmax - min(Pmax)) / (max(Pmax) - min(Pmax))`. Absolute power and retention relative to the initial value are not preserved.
 - Generated images are high resolution and may require additional memory when processing many devices.
 - Multiple figure styles may originate from the same underlying experimental curve. Treat them as related samples when designing machine-learning splits.
 - The generated figures are intended for visual-learning and scientific-visualization research; they are not device-lifetime certification results or figures extracted from papers.
