@@ -2,9 +2,9 @@
 
 [English](README.md) | [简体中文](README_CN.md)
 
-This dataset supports **visual learning for complex scientific curve figures**. It uses experimental perovskite solar-cell maximum power point tracking (MPPT) measurements to generate plots that reproduce four common difficulties in reading curves from research papers: auxiliary lines, overlap between the target curve and auxiliary lines, distracting background colors, and overlap among multiple curves. **Perovskite degradation/stability curves are the target application**; the broader figure-reading problems also occur across scientific literature. The long-term goal is to support training a dedicated multimodal large language model (vision-language model) to recognize and interpret these curves.
+**Research question.** How can a vision model follow a perovskite stability curve through the line crossings, reference marks, and visual clutter common in scientific figures?
 
-The repository contains processed MPPT data, plotting scripts, and generated images. The figures are rendered from the included measurements; they are not screenshots extracted from published papers.
+I turned **30 experimental MPPT device series** into **102 high-resolution figures** across four controlled visual challenges: auxiliary lines, line overlap, colored backgrounds, and multiple curves. The repository pairs each generated figure with processed measurements and plotting code, creating a concrete starting point for curve-tracing and figure-understanding studies.
 
 <p align="center">
   <img src="figure/multi/A705P12_P101P04.png" alt="Example comparison of two perovskite stability datasets" width="820">
@@ -21,7 +21,7 @@ The central task is to identify the **target degradation curve** despite visual 
 
 These challenges are represented through controlled renderings of perovskite MPPT time series. The intended learning path is to distinguish the target curve from non-target elements, follow it through difficult regions, and interpret the shape of the degradation curve. Model training and evaluation remain future work.
 
-> **Important: the plotted values preserve curve shape, not degradation magnitude.** Each device's `Pmax` series is min–max scaled to the range 0–1, so every curve reaches 0 at its own minimum and 1 at its own maximum. A device that retains 95 % of its initial power and one that loses 80 % can therefore look equally steep. The y-axis label `Normalized PCE` in the figures refers to this scaled value, not to PCE relative to its initial value. Use the figures for curve-shape and figure-reading tasks; do not read absolute retention, T80, or lifetime from them.
+**Measurement meaning.** Each device's `Pmax` series is min–max scaled to 0–1. This preserves curve shape while removing absolute degradation magnitude; the figure y-axis label `Normalized PCE` refers to this scaling. Retention, T80, and lifetime require the original unscaled measurements.
 
 ## Data-to-Figure Workflow
 
@@ -43,7 +43,7 @@ Experimental perovskite MPPT data
               Visual-learning image dataset
 ```
 
-The current release includes:
+The dataset includes:
 
 - 30 processed perovskite device datasets.
 - 73,242 min–max scaled time-series points.
@@ -109,7 +109,7 @@ The included collection contains 73,242 time-series points across 30 device file
 - Support future training and evaluation of a perovskite degradation-curve-focused multimodal LLM / vision-language model.
 - Compare degradation-curve shapes among single-device and multi-device MPPT plots (not degradation magnitude, because of the min–max scaling).
 
-This repository provides generated figures, processed measurements, and plotting scripts. It does **not** yet include a trained model, task-specific annotations, or an official training/validation/test split. Additional labels or instruction data may be needed for supervised model training. When creating splits, group images by device ID so that different renderings of the same experimental curve do not leak across training and evaluation sets.
+This release provides figures, processed measurements, and plotting scripts. A model-training study would add task-specific annotations and a device-grouped training/validation/test split so that renderings of one experimental curve stay in the same partition.
 
 ## Requirements
 
@@ -216,4 +216,4 @@ The committed files in `figure/assistline/` carry a `_Control_PCE` suffix (for e
 
 ## License and Data Use
 
-No license is currently included. Before redistributing the code or experimental data, add an appropriate software license and confirm that the datasets may be shared publicly.
+Reuse terms for the code and experimental data are being established. Check the source-data rights before redistributing the measurements or generated figures.
