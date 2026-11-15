@@ -2,9 +2,9 @@
 
 [English](README.md) | [简体中文](README_CN.md)
 
-**Research question.** How can a vision model follow a perovskite stability curve through the line crossings, reference marks, and visual clutter common in scientific figures?
+This repository turns **30 experimental perovskite MPPT device series** into **102 high-resolution figures** for visual recognition research. Four controlled figure categories cover auxiliary lines, line overlap, colored backgrounds, and multiple curves.
 
-I turned **30 experimental MPPT device series** into **102 high-resolution figures** across four controlled visual challenges: auxiliary lines, line overlap, colored backgrounds, and multiple curves. The repository pairs each generated figure with processed measurements and plotting code, creating a concrete starting point for curve-tracing and figure-understanding studies.
+Each generated figure is paired with processed measurements and plotting code. The dataset supports studies of curve tracing and scientific-figure understanding.
 
 <p align="center">
   <img src="figure/multi/A705P12_P101P04.png" alt="Example comparison of two perovskite stability datasets" width="820">
